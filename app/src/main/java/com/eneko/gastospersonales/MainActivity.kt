@@ -34,14 +34,21 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") {
-                        HomeScreen(transactions = transactions, onAddTransactionClick = {
-                            navController.navigate("addTransaction")
-                        })
+                        HomeScreen(
+                            transactions = transactions,
+                            onAddTransactionClick = {
+                                navController.navigate("addTransaction")
+                            },
+                            onDeleteTransaction = { transaction ->
+                                transactionViewModel.deleteTransaction(transaction)
+                            }
+                        )
                     }
+
                     composable("addTransaction") {
                         AddTransactionScreen { transaction ->
                             transactionViewModel.addTransaction(transaction)
-                            navController.popBackStack() // Regresar a Home después de agregar
+                            navController.popBackStack()
                         }
                     }
                 }
