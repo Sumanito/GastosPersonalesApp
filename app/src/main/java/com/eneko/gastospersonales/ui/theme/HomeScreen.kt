@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eneko.gastospersonales.data.TransactionEntity
 
+
 @Composable
 fun HomeScreen(
     transactions: List<TransactionEntity>,
@@ -16,6 +17,7 @@ fun HomeScreen(
     onDeleteTransaction: (TransactionEntity) -> Unit
 ) {
     var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
+    val updatedTransactions by remember { mutableStateOf(transactions) }  // 📌 Guarda la lista actualizada
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(text = "Gastos Personales", style = MaterialTheme.typography.headlineMedium)
@@ -32,7 +34,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
-            items(transactions) { transaction ->
+            items(updatedTransactions) { transaction ->
                 TransactionItem(transaction, onDeleteClick = { transactionToDelete = transaction })
             }
         }
@@ -42,13 +44,17 @@ fun HomeScreen(
         DeleteTransactionDialog(
             transaction = transaction,
             onConfirm = {
-                onDeleteTransaction(transaction)
+                onDeleteTransaction(transaction)  // ✅ Solo pasamos la transacción, sin parámetros extra
                 transactionToDelete = null
-            },
+            }
+            ,
             onDismiss = { transactionToDelete = null }
         )
     }
 }
+
+
+
 
 @Composable
 fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit) {

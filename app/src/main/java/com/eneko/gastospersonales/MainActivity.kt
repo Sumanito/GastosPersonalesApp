@@ -40,14 +40,20 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("addTransaction")
                             },
                             onDeleteTransaction = { transaction ->
-                                transactionViewModel.deleteTransaction(transaction)
+                                transactionViewModel.deleteTransaction(transaction) { updatedTransactions ->
+                                    transactions.clear()
+                                    transactions.addAll(updatedTransactions)  // ✅ Actualizamos la lista después de eliminar
+                                }
                             }
                         )
                     }
 
                     composable("addTransaction") {
                         AddTransactionScreen { transaction ->
-                            transactionViewModel.addTransaction(transaction)
+                            transactionViewModel.addTransaction(transaction) {
+                                transactions.clear()
+                                transactions.addAll(it)  // 🔄 Actualiza la lista después de añadir
+                            }
                             navController.popBackStack()
                         }
                     }
@@ -56,3 +62,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+

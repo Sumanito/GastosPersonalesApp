@@ -13,25 +13,41 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private val transactionDao = AppDatabase.getDatabase(application).transactionDao()
 
     fun getTransactions(onResult: (List<TransactionEntity>) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) { // <-- Mueve la ejecución a un hilo secundario (IO)
+        viewModelScope.launch(Dispatchers.IO) {
             val transactions = transactionDao.getAllTransactions()
-            withContext(Dispatchers.Main) { // <-- Vuelve al hilo principal para actualizar la UI
+            withContext(Dispatchers.Main) {
                 onResult(transactions)
             }
         }
     }
 
+    fun addTransaction(transaction: TransactionEntity, onResult: (List<TransactionEntity>) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionDao.insert(transaction)  // 🟢 Inserta la transacción en la BD
 
-    fun addTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
-            transactionDao.insertTransaction(transaction)
+            val updatedTransactions = transactionDao.getAllTransactions()  // 🔄 Obtiene la lista actualizada
+            withContext(Dispatchers.Main) {
+                onResult(updatedTransactions)  // ✅ Devuelve la lista actualizada a la UI
+            }
         }
     }
 
-    fun deleteTransaction(transaction: TransactionEntity) {
-        viewModelScope.launch {
-            transactionDao.deleteTransaction(transaction)
+
+
+
+
+    fun deleteTransaction(transaction: TransactionEntity, onResult: (List<TransactionEntity>) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionDao.deleteTransaction(transaction)  // ✅ Eliminamos la transacción
+            val updatedTransactions = transactionDao.getAllTransactions()  // 🔄 Obtenemos la lista actualizada
+            withContext(Dispatchers.Main) {
+                onResult(updatedTransactions)  // ✅ Devolvemos la lista a la UI
+            }
         }
     }
+
+
+
+
 }
 
