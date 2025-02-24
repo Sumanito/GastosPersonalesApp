@@ -33,19 +33,23 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     }
 
 
-
-
-
-    fun deleteTransaction(transaction: TransactionEntity, onResult: (List<TransactionEntity>) -> Unit) {
+    fun deleteTransaction(transaction: TransactionEntity, onComplete: (List<TransactionEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            transactionDao.deleteTransaction(transaction)  // ✅ Eliminamos la transacción
-            val updatedTransactions = transactionDao.getAllTransactions()  // 🔄 Obtenemos la lista actualizada
+            transactionDao.deleteTransaction(transaction)
+            val updatedTransactions = transactionDao.getAllTransactions() // Obtener la lista actualizada
             withContext(Dispatchers.Main) {
-                onResult(updatedTransactions)  // ✅ Devolvemos la lista a la UI
+                onComplete(updatedTransactions) // Pasar la lista actualizada al callback
             }
         }
     }
 
+
+
+    fun updateTransaction(transaction: TransactionEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionDao.updateTransaction(transaction)
+        }
+    }
 
 
 

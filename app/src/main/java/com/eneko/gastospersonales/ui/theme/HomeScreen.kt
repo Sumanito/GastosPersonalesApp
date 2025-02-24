@@ -14,10 +14,10 @@ import com.eneko.gastospersonales.data.TransactionEntity
 fun HomeScreen(
     transactions: List<TransactionEntity>,
     onAddTransactionClick: () -> Unit,
-    onDeleteTransaction: (TransactionEntity) -> Unit
+    onDeleteTransaction: (TransactionEntity) -> Unit,
+    onEditTransaction: (TransactionEntity) -> Unit
 ) {
-    var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
-    val updatedTransactions by remember { mutableStateOf(transactions) }  // 📌 Guarda la lista actualizada
+    var transactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(text = "Gastos Personales", style = MaterialTheme.typography.headlineMedium)
@@ -34,21 +34,24 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
-            items(updatedTransactions) { transaction ->
-                TransactionItem(transaction, onDeleteClick = { transactionToDelete = transaction })
+            items(transactions) { transaction ->
+                TransactionItem(
+                    transaction,
+                    onDeleteClick = { onDeleteTransaction(transaction) },
+                    onEditClick = { transactionToEdit = transaction }
+                )
             }
         }
     }
 
-    transactionToDelete?.let { transaction ->
-        DeleteTransactionDialog(
+    transactionToEdit?.let { transaction ->
+        EditTransactionDialog(
             transaction = transaction,
-            onConfirm = {
-                onDeleteTransaction(transaction)  // ✅ Solo pasamos la transacción, sin parámetros extra
-                transactionToDelete = null
-            }
-            ,
-            onDismiss = { transactionToDelete = null }
+            onConfirm = { updatedTransaction ->
+                onEditTransaction(updatedTransaction)
+                transactionToEdit = null
+            },
+            onDismiss = { transactionToEdit = null }
         )
     }
 }
@@ -56,8 +59,10 @@ fun HomeScreen(
 
 
 
+
+
 @Composable
-fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit) {
+fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -71,12 +76,19 @@ fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(onClick = onDeleteClick, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)) {
-                Text("Eliminar")
+            Row {
+                Button(onClick = onEditClick, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)) {
+                    Text("Editar")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = onDeleteClick, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)) {
+                    Text("Eliminar")
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun DeleteTransactionDialog(transaction: TransactionEntity, onConfirm: () -> Unit, onDismiss: () -> Unit) {
