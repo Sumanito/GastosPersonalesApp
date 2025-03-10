@@ -49,9 +49,12 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
+
 
     // Room Database (Base de datos local)
     implementation(libs.room.runtime)
+    implementation(libs.androidx.media3.exoplayer)
     kapt(libs.room.compiler)
     implementation(libs.room.ktx)
 

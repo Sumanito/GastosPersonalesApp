@@ -53,4 +53,26 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
     }
+    fun getBalance(onResult: (Double) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val transactions = transactionDao.getAllTransactions()
+            val balance = transactions.sumOf { it.amount }
+            withContext(Dispatchers.Main) {
+                onResult(balance)
+            }
+        }
+    }
+
+    fun exportTransactionsToFile(onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val transactions = transactionDao.getAllTransactions()
+            val success = FileUtils.exportToCSV(appContext, transactions)  // Usa FileUtils para exportar
+            withContext(Dispatchers.Main) {
+                onComplete(success) // Devuelve el estado de la exportación
+            }
+        }
+    }
+
+
+
 }

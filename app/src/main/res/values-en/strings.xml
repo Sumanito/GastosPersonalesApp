@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Personal Expenses</string>
+    <string name="balance">Total Balance</string>
+    <string name="add_transaction">Add Transaction</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="amount">Amount</string>
+    <string name="date">Date</string>
+    <string name="export_csv">Export CSV</string>
+</resources>
+
