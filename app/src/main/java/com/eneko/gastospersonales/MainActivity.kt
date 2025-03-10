@@ -13,10 +13,23 @@ import com.eneko.gastospersonales.data.TransactionEntity
 import com.eneko.gastospersonales.ui.theme.GastosPersonalesTheme
 import com.eneko.gastospersonales.ui.theme.HomeScreen
 import com.eneko.gastospersonales.ui.theme.AddTransactionScreen
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import com.eneko.gastospersonales.notifications.TransactionNotification
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val CHANNEL_ID = "transactions_channel"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Crear canal de notificaciones
+        createNotificationChannel()
 
         setContent {
             GastosPersonalesTheme {
@@ -24,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 val transactionViewModel: TransactionViewModel = viewModel()
                 val transactions = remember { mutableStateListOf<TransactionEntity>() }
 
-                // Cargar transacciones desde la base de datos
+                // ✅ Cargar transacciones al iniciar la app
                 LaunchedEffect(Unit) {
                     transactionViewModel.getTransactions { fetchedTransactions ->
                         transactions.clear()
@@ -40,28 +53,47 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("addTransaction")
                             },
                             onDeleteTransaction = { transaction ->
-                                transactionViewModel.deleteTransaction(transaction) {
+                                transactionViewModel.deleteTransaction(transaction) { updatedTransactions ->
                                     transactions.clear()
-                                    transactions.addAll(it)  // 🔄 Actualiza la lista después de eliminar
+                                    transactions.addAll(updatedTransactions)
+
+                                    // ✅ Disparar notificación de eliminación
+                                    TransactionNotification.showTransactionNotification(
+                                        context = this@MainActivity,
+                                        transaction = transaction,
+                                        action = "delete"
+                                    )
                                 }
                             },
                             onEditTransaction = { updatedTransaction ->
-                                transactionViewModel.updateTransaction(updatedTransaction) // 🔄 Llama a la actualización en la BD
+                                transactionViewModel.updateTransaction(updatedTransaction)
                                 transactionViewModel.getTransactions { updatedTransactions ->
                                     transactions.clear()
-                                    transactions.addAll(updatedTransactions)  // 🔄 Actualiza la lista en la UI
+                                    transactions.addAll(updatedTransactions)
+
+                                    // ✅ Disparar notificación de actualización
+                                    TransactionNotification.showTransactionNotification(
+                                        context = this@MainActivity,
+                                        transaction = updatedTransaction,
+                                        action = "update"
+                                    )
                                 }
                             }
                         )
                     }
 
-
-
                     composable("addTransaction") {
                         AddTransactionScreen { transaction ->
-                            transactionViewModel.addTransaction(transaction) {
+                            transactionViewModel.addTransaction(transaction) { updatedTransactions ->
                                 transactions.clear()
-                                transactions.addAll(it)  // 🔄 Actualiza la lista después de añadir
+                                transactions.addAll(updatedTransactions)
+
+                                // ✅ Disparar notificación de nueva transacción
+                                TransactionNotification.showTransactionNotification(
+                                    context = this@MainActivity,
+                                    transaction = transaction,
+                                    action = "add"
+                                )
                             }
                             navController.popBackStack()
                         }
@@ -70,5 +102,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Transacciones",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Canal para notificaciones de transacciones"
+            }
+
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+}

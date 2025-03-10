@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eneko.gastospersonales.data.TransactionEntity
 
-
 @Composable
 fun HomeScreen(
     transactions: List<TransactionEntity>,
@@ -17,7 +16,7 @@ fun HomeScreen(
     onDeleteTransaction: (TransactionEntity) -> Unit,
     onEditTransaction: (TransactionEntity) -> Unit
 ) {
-    var transactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
+    var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(text = "Gastos Personales", style = MaterialTheme.typography.headlineMedium)
@@ -37,24 +36,25 @@ fun HomeScreen(
             items(transactions) { transaction ->
                 TransactionItem(
                     transaction,
-                    onDeleteClick = { onDeleteTransaction(transaction) },
-                    onEditClick = { transactionToEdit = transaction }
+                    onDeleteClick = { transactionToDelete = transaction }, // ⚠️ Solo marcamos para eliminar
+                    onEditClick = { onEditTransaction(transaction) }
                 )
             }
         }
     }
 
-    transactionToEdit?.let { transaction ->
-        EditTransactionDialog(
+    transactionToDelete?.let { transaction ->
+        DeleteTransactionDialog(
             transaction = transaction,
-            onConfirm = { updatedTransaction ->
-                onEditTransaction(updatedTransaction)
-                transactionToEdit = null
+            onConfirm = {
+                onDeleteTransaction(transaction)  // ✅ Ahora solo eliminamos tras confirmación
+                transactionToDelete = null
             },
-            onDismiss = { transactionToEdit = null }
+            onDismiss = { transactionToDelete = null }
         )
     }
 }
+
 
 
 
@@ -90,21 +90,4 @@ fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit, o
 }
 
 
-@Composable
-fun DeleteTransactionDialog(transaction: TransactionEntity, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Eliminar transacción") },
-        text = { Text("¿Estás seguro de que deseas eliminar esta transacción de ${transaction.amount} € en ${transaction.category}?") },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Eliminar")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
-    )
-}
+
