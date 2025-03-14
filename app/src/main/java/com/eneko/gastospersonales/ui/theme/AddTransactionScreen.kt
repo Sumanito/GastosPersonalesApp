@@ -5,8 +5,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.eneko.gastospersonales.data.TransactionEntity
 import java.text.SimpleDateFormat
 import java.util.*
@@ -17,17 +19,18 @@ fun AddTransactionScreen(
 ) {
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("Ingreso") } // Puede ser "Ingreso" o "Gasto"
+    var type by remember { mutableStateOf("Ingreso") }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(text = "Añadir Transacción", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "Añadir Transacción", style = MaterialTheme.typography.headlineMedium, color = TextColor)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it },
-            label = { Text("Monto") },
+            label = { Text("Monto", color = TextColor) },
+            textStyle = TextStyle(color = TextColor), // Asegura que el texto sea visible
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -37,21 +40,34 @@ fun AddTransactionScreen(
         OutlinedTextField(
             value = category,
             onValueChange = { category = it },
-            label = { Text("Categoría") },
+            label = { Text("Categoría", color = TextColor) },
+            textStyle = TextStyle(color = TextColor), // Asegura que el texto sea visible
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Row {
-            Text(text = "Tipo:")
+            Text(text = "Tipo:", color = TextColor)
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { type = "Ingreso" }, enabled = type != "Ingreso") {
-                Text("Ingreso")
+            Button(
+                onClick = { type = "Ingreso" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (type == "Ingreso") IncomeColor else Color.Gray
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Ingreso", color = Color.White)
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { type = "Gasto" }, enabled = type != "Gasto") {
-                Text("Gasto")
+            Button(
+                onClick = { type = "Gasto" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (type == "Gasto") ExpenseColor else Color.Gray
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Gasto", color = Color.White)
             }
         }
 
@@ -69,10 +85,10 @@ fun AddTransactionScreen(
                     onTransactionAdded(transaction)
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
         ) {
-            Text("Añadir")
+            Text("Añadir", color = Color.White)
         }
     }
 }
-

@@ -66,19 +66,21 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onEditTransaction = { updatedTransaction ->
-                                transactionViewModel.updateTransaction(updatedTransaction)
-                                transactionViewModel.getTransactions { updatedTransactions ->
-                                    transactions.clear()
-                                    transactions.addAll(updatedTransactions)
+                                transactionViewModel.updateTransaction(updatedTransaction) {
+                                    transactionViewModel.getTransactions { updatedTransactions ->
+                                        transactions.clear()
+                                        transactions.addAll(updatedTransactions)
 
-                                    // ✅ Disparar notificación de actualización
-                                    TransactionNotification.showTransactionNotification(
-                                        context = this@MainActivity,
-                                        transaction = updatedTransaction,
-                                        action = "update"
-                                    )
+                                        // ✅ Disparar notificación de actualización
+                                        TransactionNotification.showTransactionNotification(
+                                            context = this@MainActivity,
+                                            transaction = updatedTransaction,
+                                            action = "update"
+                                        )
+                                    }
                                 }
                             }
+
                         )
                     }
 

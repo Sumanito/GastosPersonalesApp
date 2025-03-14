@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 
 class TransactionViewModel(application: Application) : AndroidViewModel(application) {
     private val transactionDao = AppDatabase.getDatabase(application).transactionDao()
-    private val appContext = application.applicationContext // ✅ Contexto de la aplicación
+    private val appContext = application.applicationContext
 
     fun getTransactions(onResult: (List<TransactionEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -40,39 +40,42 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             val updatedTransactions = transactionDao.getAllTransactions()
             withContext(Dispatchers.Main) {
                 TransactionNotification.showTransactionNotification(appContext, transaction, "delete")
-                onComplete(updatedTransactions)
+                onComplete(updatedTransactions) // ✅ Llamamos con la lista actualizada
             }
         }
     }
 
-    fun updateTransaction(transaction: TransactionEntity) {
+
+    fun updateTransaction(transaction: TransactionEntity, onComplete: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             transactionDao.updateTransaction(transaction)
             withContext(Dispatchers.Main) {
                 TransactionNotification.showTransactionNotification(appContext, transaction, "update")
+                onComplete()  // ✅ Se llama cuando termina la actualización
             }
         }
     }
+
+
     fun getBalance(onResult: (Double) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val transactions = transactionDao.getAllTransactions()
-            val balance = transactions.sumOf { it.amount }
+            val balance = transactions.sumOf {
+                if (it.type == "Ingreso") it.amount else -it.amount
+            }
             withContext(Dispatchers.Main) {
                 onResult(balance)
             }
         }
     }
-
     fun exportTransactionsToFile(onComplete: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val transactions = transactionDao.getAllTransactions()
-            val success = FileUtils.exportToCSV(appContext, transactions)  // Usa FileUtils para exportar
+            val success = FileUtils.exportToCSV(appContext, transactions)
             withContext(Dispatchers.Main) {
-                onComplete(success) // Devuelve el estado de la exportación
+                onComplete(success)
             }
         }
     }
-
-
 
 }

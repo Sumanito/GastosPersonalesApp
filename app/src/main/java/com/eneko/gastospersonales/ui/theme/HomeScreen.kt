@@ -6,17 +6,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.eneko.gastospersonales.data.TransactionEntity
 import com.eneko.gastospersonales.viewmodel.TransactionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource
 import com.eneko.gastospersonales.R
-import androidx.compose.material.icons.filled.Download
 
 @Composable
 fun HomeScreen(
@@ -26,18 +27,35 @@ fun HomeScreen(
     onEditTransaction: (TransactionEntity) -> Unit
 ) {
     var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
-    var balance by remember { mutableStateOf(0.0) }
+    var transactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
+    var balance by remember { mutableDoubleStateOf(0.0) }
+    var showSnackbar by remember { mutableStateOf(false) }
+    var snackbarMessage by remember { mutableStateOf("") }
 
     val transactionViewModel: TransactionViewModel = viewModel()
 
-    // Obtener saldo total
+    // 🏦 Obtener saldo total
     LaunchedEffect(Unit) {
         transactionViewModel.getBalance { newBalance ->
             balance = newBalance
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        // 🔹 Snackbar para mostrar mensajes
+        if (showSnackbar) {
+            Snackbar(
+                action = {
+                    Button(onClick = { showSnackbar = false }) {
+                        Text("OK")
+                    }
+                }
+            ) {
+                Text(snackbarMessage)
+            }
+        }
 
         // 🔹 Encabezado con saldo total
         Row(
@@ -47,88 +65,143 @@ fun HomeScreen(
         ) {
             Text(
                 text = "${stringResource(id = R.string.balance)}: ${balance}€",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                color = if (balance >= 0) IncomeColor else ExpenseColor
             )
 
-            // 🔹 Botón para exportar transacciones
+            // 🛠️ Botón de exportación CSV optimizado
             Button(
-                onClick = { transactionViewModel.exportTransactionsToFile { success ->
-                    if (success) {
-                        // Puedes mostrar un mensaje de éxito
-                        println("Exportación completada")
-                    } else {
-                        println("Error al exportar")
+                onClick = {
+                    transactionViewModel.exportTransactionsToFile { success ->
+                        snackbarMessage = if (success) {
+                            "✅ Exportación exitosa: Archivo guardado en Documentos 📂"
+                        } else {
+                            "❌ Error al exportar"
+                        }
+                        showSnackbar = true
                     }
-                }},
-                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)
+                },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.tertiary),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .height(45.dp)  // 🔹 Mantiene un tamaño consistente
+                    .widthIn(min = 120.dp, max = 180.dp),  // 🔹 Controla el ancho máximo y mínimo
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp) // 🔹 Espaciado interno óptimo
             ) {
-                Icon(Icons.Filled.Download, contentDescription = stringResource(id = R.string.export_csv))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = stringResource(id = R.string.export_csv))
+                Icon(
+                    Icons.Filled.Download,
+                    contentDescription = "Exportar CSV",
+                    modifier = Modifier.size(18.dp) // 🔹 Reduce el tamaño del icono para mejor proporción
+                )
+                Spacer(modifier = Modifier.width(6.dp)) // 🔹 Espaciado entre icono y texto
+                Text(
+                    text = "Exportar CSV",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 🔹 Botón para añadir transacción
         Button(
             onClick = { onAddTransactionClick() },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
         ) {
             Text(stringResource(id = R.string.add_transaction))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 🔹 Lista de transacciones
         LazyColumn {
             items(transactions) { transaction ->
                 TransactionItem(
-                    transaction,
-                    onDeleteClick = { transactionToDelete = transaction }, // ⚠️ Solo marcamos para eliminar
-                    onEditClick = { onEditTransaction(transaction) }
+                    transaction = transaction,
+                    onDeleteClick = { transactionToDelete = transaction },
+                    onEditClick = { transactionToEdit = transaction }
                 )
             }
         }
     }
 
+    // 🔹 Diálogo de confirmación para eliminar
     transactionToDelete?.let { transaction ->
         DeleteTransactionDialog(
             transaction = transaction,
             onConfirm = {
-                onDeleteTransaction(transaction)  // ✅ Eliminar tras confirmación
+                onDeleteTransaction(transaction)
+                transactionViewModel.getBalance { newBalance -> balance = newBalance }
                 transactionToDelete = null
             },
             onDismiss = { transactionToDelete = null }
         )
     }
+
+    // 🔹 Diálogo de edición de transacción
+    transactionToEdit?.let { transaction ->
+        EditTransactionDialog(
+            transaction = transaction,
+            onConfirm = { updatedTransaction ->
+                onEditTransaction(updatedTransaction)
+                transactionViewModel.getBalance { newBalance -> balance = newBalance }
+                transactionToEdit = null
+            },
+            onDismiss = { transactionToEdit = null }
+        )
+    }
 }
 
+// 📌 **Definición de TransactionItem** (arreglando error de referencia)
 @Composable
 fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = transaction.category, style = MaterialTheme.typography.titleMedium)
-            Text(text = "${stringResource(id = R.string.amount)}: ${transaction.amount}€", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "${stringResource(id = R.string.date)}: ${transaction.date}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "${stringResource(id = R.string.amount)}: ${transaction.amount}€",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (transaction.type == "Ingreso") IncomeColor else ExpenseColor
+            )
+            Text(
+                text = "${stringResource(id = R.string.date)}: ${transaction.date}",
+                style = MaterialTheme.typography.bodySmall,
+                color = DarkGray
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Row {
-                Button(onClick = onEditClick, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar")
+                // 🔹 Botón Editar (NEGRO)
+                Button(
+                    onClick = onEditClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(id = R.string.edit))
+                    Text(stringResource(id = R.string.edit), color = Color.White)
                 }
+
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = onDeleteClick, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+
+                // 🔹 Botón Eliminar (SIEMPRE ROJO)
+                Button(
+                    onClick = onDeleteClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.White)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(id = R.string.delete))
+                    Text(stringResource(id = R.string.delete), color = Color.White)
                 }
             }
         }

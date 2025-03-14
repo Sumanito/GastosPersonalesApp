@@ -34,13 +34,18 @@ fun EditTransactionDialog(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val updatedTransaction = transaction.copy(
-                    category = updatedCategory,
-                    amount = updatedAmount.toDoubleOrNull() ?: transaction.amount
+            Button(
+                onClick = {
+                    val updatedTransaction = transaction.copy(
+                        category = updatedCategory,
+                        amount = updatedAmount.toDoubleOrNull() ?: transaction.amount
+                    )
+                    onConfirm(updatedTransaction)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    if (transaction.type == "Ingreso") EditIncomeColor else EditExpenseColor
                 )
-                onConfirm(updatedTransaction)  // 🔄 Pasamos la transacción editada
-            }) {
+            ) {
                 Text("Guardar")
             }
         },
