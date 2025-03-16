@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
                 val transactionViewModel: TransactionViewModel = viewModel()
                 val transactions = remember { mutableStateListOf<TransactionEntity>() }
 
-                // ✅ Cargar transacciones al iniciar la app
                 LaunchedEffect(Unit) {
                     transactionViewModel.getTransactions { fetchedTransactions ->
                         transactions.clear()
@@ -64,13 +63,6 @@ class MainActivity : ComponentActivity() {
                                 transactionViewModel.deleteTransaction(transaction) { updatedTransactions ->
                                     transactions.clear()
                                     transactions.addAll(updatedTransactions)
-
-                                    // ✅ Disparar notificación de eliminación
-                                    TransactionNotification.showTransactionNotification(
-                                        context = this@MainActivity,
-                                        transaction = transaction,
-                                        action = "delete"
-                                    )
                                 }
                             },
                             onEditTransaction = { updatedTransaction ->
@@ -78,16 +70,13 @@ class MainActivity : ComponentActivity() {
                                     transactionViewModel.getTransactions { updatedTransactions ->
                                         transactions.clear()
                                         transactions.addAll(updatedTransactions)
-
-                                        // ✅ Disparar notificación de actualización
-                                        TransactionNotification.showTransactionNotification(
-                                            context = this@MainActivity,
-                                            transaction = updatedTransaction,
-                                            action = "update"
-                                        )
                                     }
                                 }
                             }
+
+
+
+
                         )
                     }
 

@@ -40,21 +40,24 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             val updatedTransactions = transactionDao.getAllTransactions()
             withContext(Dispatchers.Main) {
                 TransactionNotification.showTransactionNotification(appContext, transaction, "delete")
-                onComplete(updatedTransactions) // ✅ Llamamos con la lista actualizada
+                onComplete(updatedTransactions)
             }
         }
     }
 
 
-    fun updateTransaction(transaction: TransactionEntity, onComplete: () -> Unit) {
+    fun updateTransaction(transaction: TransactionEntity, onComplete: (List<TransactionEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             transactionDao.updateTransaction(transaction)
+            val updatedTransactions = transactionDao.getAllTransactions()
             withContext(Dispatchers.Main) {
                 TransactionNotification.showTransactionNotification(appContext, transaction, "update")
-                onComplete()  // ✅ Se llama cuando termina la actualización
+                onComplete(updatedTransactions)
             }
         }
     }
+
+
 
 
     fun getBalance(onResult: (Double) -> Unit) {

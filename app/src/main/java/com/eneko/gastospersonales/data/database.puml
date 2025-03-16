@@ -1,0 +1,23 @@
+@startuml
+class AppDatabase {
+    + transactionDao: TransactionDao
+}
+
+class TransactionDao {
+    + getAllTransactions(): List<TransactionEntity>
+    + insert(transaction: TransactionEntity)
+    + deleteTransaction(transaction: TransactionEntity)
+    + updateTransaction(transaction: TransactionEntity)
+}
+
+class TransactionEntity {
+    + id: Int
+    + amount: Double
+    + category: String
+    + date: String
+    + type: String
+}
+
+AppDatabase --> TransactionDao
+TransactionDao --> TransactionEntity
+@enduml

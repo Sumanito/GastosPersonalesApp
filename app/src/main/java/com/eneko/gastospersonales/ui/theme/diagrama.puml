@@ -1,0 +1,15 @@
+@startuml
+title Diagrama de Navegación - GastosPersonalesApp
+
+[*] --> HomeScreen : Inicio
+
+HomeScreen --> AddTransactionScreen : Añadir Transacción
+AddTransactionScreen --> HomeScreen : Volver tras añadir
+
+HomeScreen --> EditTransactionDialog : Editar Transacción
+EditTransactionDialog --> HomeScreen : Guardar cambios
+
+HomeScreen --> DeleteTransactionDialog : Confirmar eliminación
+DeleteTransactionDialog --> HomeScreen : Eliminar transacción
+
+@enduml

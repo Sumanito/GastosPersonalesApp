@@ -34,7 +34,6 @@ fun HomeScreen(
 
     val transactionViewModel: TransactionViewModel = viewModel()
 
-    // 🏦 Obtener saldo total
     LaunchedEffect(Unit) {
         transactionViewModel.getBalance { newBalance ->
             balance = newBalance
@@ -44,7 +43,6 @@ fun HomeScreen(
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        // 🔹 Snackbar para mostrar mensajes
         if (showSnackbar) {
             Snackbar(
                 action = {
@@ -57,7 +55,6 @@ fun HomeScreen(
             }
         }
 
-        // 🔹 Encabezado con saldo total
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -69,7 +66,6 @@ fun HomeScreen(
                 color = if (balance >= 0) IncomeColor else ExpenseColor
             )
 
-            // 🛠️ Botón de exportación CSV optimizado
             Button(
                 onClick = {
                     transactionViewModel.exportTransactionsToFile { success ->
@@ -84,19 +80,21 @@ fun HomeScreen(
                 colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.tertiary),
                 modifier = Modifier
                     .padding(8.dp)
-                    .height(45.dp)  // 🔹 Mantiene un tamaño consistente
-                    .widthIn(min = 120.dp, max = 180.dp),  // 🔹 Controla el ancho máximo y mínimo
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp) // 🔹 Espaciado interno óptimo
+                    .height(45.dp)
+                    .widthIn(min = 120.dp, max = 180.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Icon(
                     Icons.Filled.Download,
                     contentDescription = "Exportar CSV",
-                    modifier = Modifier.size(18.dp) // 🔹 Reduce el tamaño del icono para mejor proporción
+                    modifier = Modifier.size(18.dp),
+                    tint = Color.White // Asegura que el icono sea blanco
                 )
-                Spacer(modifier = Modifier.width(6.dp)) // 🔹 Espaciado entre icono y texto
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Exportar CSV",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White // 🔹 Cambia el color del texto a blanco
                 )
             }
 
@@ -115,7 +113,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 Lista de transacciones
         LazyColumn {
             items(transactions) { transaction ->
                 TransactionItem(
@@ -133,7 +130,7 @@ fun HomeScreen(
             transaction = transaction,
             onConfirm = {
                 onDeleteTransaction(transaction)
-                transactionViewModel.getBalance { newBalance -> balance = newBalance }
+                transactionViewModel.getBalance { newBalance -> balance = newBalance }  // ✅ Se actualiza el saldo
                 transactionToDelete = null
             },
             onDismiss = { transactionToDelete = null }
@@ -146,15 +143,19 @@ fun HomeScreen(
             transaction = transaction,
             onConfirm = { updatedTransaction ->
                 onEditTransaction(updatedTransaction)
-                transactionViewModel.getBalance { newBalance -> balance = newBalance }
+                transactionViewModel.getBalance { newBalance -> balance = newBalance }  // ✅ Se actualiza el saldo
                 transactionToEdit = null
             },
             onDismiss = { transactionToEdit = null }
         )
     }
+
+    LaunchedEffect(transactions) {
+        transactionViewModel.getBalance { newBalance -> balance = newBalance }
+    }
 }
 
-// 📌 **Definición de TransactionItem** (arreglando error de referencia)
+
 @Composable
 fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit, onEditClick: () -> Unit) {
     Card(
@@ -193,7 +194,6 @@ fun TransactionItem(transaction: TransactionEntity, onDeleteClick: () -> Unit, o
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // 🔹 Botón Eliminar (SIEMPRE ROJO)
                 Button(
                     onClick = onDeleteClick,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),

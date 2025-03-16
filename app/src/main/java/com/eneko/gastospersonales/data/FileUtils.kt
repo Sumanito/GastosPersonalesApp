@@ -15,7 +15,6 @@ object FileUtils {
         val isAndroid10OrHigher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
         val outputStream: OutputStream? = if (isAndroid10OrHigher) {
-            // 📂 Guardar usando MediaStore en Android 10+ en la carpeta DESCARGAS
             val contentResolver = context.contentResolver
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, csvFileName)
@@ -25,7 +24,6 @@ object FileUtils {
             val uri = contentResolver.insert(MediaStore.Downloads.getContentUri("external"), contentValues)
             uri?.let { contentResolver.openOutputStream(it) }
         } else {
-            // 📂 Guardar en almacenamiento externo en versiones anteriores
             val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), csvFileName)  // ✅ CAMBIADO a Descargas
             FileOutputStream(file)
         }

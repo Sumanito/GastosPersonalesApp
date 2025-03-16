@@ -9,5 +9,5 @@ data class TransactionEntity(
     val amount: Double,
     val category: String,
     val date: String,
-    val type: String  // "Ingreso" o "Gasto"
+    val type: String
 )
