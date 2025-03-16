@@ -1,8 +1,16 @@
 package com.eneko.gastospersonales
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.*
 import androidx.navigation.compose.rememberNavController
@@ -13,16 +21,13 @@ import com.eneko.gastospersonales.data.TransactionEntity
 import com.eneko.gastospersonales.ui.theme.GastosPersonalesTheme
 import com.eneko.gastospersonales.ui.theme.HomeScreen
 import com.eneko.gastospersonales.ui.theme.AddTransactionScreen
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
 import com.eneko.gastospersonales.notifications.TransactionNotification
 
 class MainActivity : ComponentActivity() {
 
     companion object {
         private const val CHANNEL_ID = "transactions_channel"
+        private const val REQUEST_CODE_NOTIFICATIONS = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +35,9 @@ class MainActivity : ComponentActivity() {
 
         // ✅ Crear canal de notificaciones
         createNotificationChannel()
+
+        // ✅ Solicitar permiso de notificaciones si es necesario (Android 13+)
+        requestNotificationPermission()
 
         setContent {
             GastosPersonalesTheme {
@@ -80,7 +88,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-
                         )
                     }
 
@@ -118,6 +125,20 @@ class MainActivity : ComponentActivity() {
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    REQUEST_CODE_NOTIFICATIONS
+                )
+            }
         }
     }
 }
